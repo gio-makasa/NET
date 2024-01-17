@@ -13,14 +13,14 @@ namespace FinalAPI.EF
         public int Id { get; set; }
 
         [Required]
-        public required string FirstName { get; set; }
+        public string FirstName { get; set; }
 
         [Required]
-        public required string LastName { get; set; }
+        public string LastName { get; set; }
 
         [Required]
-        public required string PID { get; set; }
+        public string PID { get; set; }
 
-        public virtual ICollection<SoldProducts> SoldProduct { get; set; }
+        protected virtual ICollection<SoldProducts> SoldProduct { get; set; }
     }
 }

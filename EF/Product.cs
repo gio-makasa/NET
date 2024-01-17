@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace FinalAPI.EF
 {
@@ -10,29 +11,34 @@ namespace FinalAPI.EF
         }
 
         [Required]
+        [JsonIgnore]
         public int Id { get; set; }
 
         [Required]
         [MinLength(15)]
         [MaxLength(50)]
-        public required string Name { get; set; }
+        public string Name { get; set; }
 
         [Required]
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public Categories Category { get; set; }
 
         [Required]
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public Types Type { get; set; }
 
         [Required]
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public Policies Policy { get; set; }
 
+        [Required]
         public decimal Amount { get; set; }
 
         [Required]
         [MinLength(1000)]
-        public required string Description { get; set; }
+        public string Description { get; set; }
 
-        public virtual ICollection<SoldProducts> SoldProduct { get; set; }
+        protected virtual ICollection<SoldProducts> SoldProduct { get; set; }
     }
 
     public enum Categories

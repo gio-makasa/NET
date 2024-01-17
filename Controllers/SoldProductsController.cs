@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using FinalAPI.Data;
 using FinalAPI.EF;
+using FinalAPI.Models;
 
 namespace FinalAPI.Controllers
 {
@@ -25,49 +26,28 @@ namespace FinalAPI.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<SoldProducts>>> GetSoldProducts()
         {
-            return await _context.SoldProducts.ToListAsync();
-        }
-
-        // GET: api/SoldProducts/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<SoldProducts>> GetSoldProducts(int id)
-        {
-            var soldProducts = await _context.SoldProducts.FindAsync(id);
-
-            if (soldProducts == null)
-            {
-                return NotFound();
-            }
-
-            return soldProducts;
+            return await _context.SoldProducts.Include(e => e.Product).Include(e => e.Customer).ToListAsync();
         }
 
         // PUT: api/SoldProducts/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutSoldProducts(int id, SoldProducts soldProducts)
+        public async Task<IActionResult> PutSoldProducts(int id, SoldProductsDTO soldProducts)
         {
-            if (id != soldProducts.Id)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(soldProducts).State = EntityState.Modified;
-
             try
             {
+                var s = await _context.SoldProducts.FindAsync(id);
+                if (s == null)
+                    return NotFound();
+                s.ProductId = soldProducts.ProductId;
+                s.CustomerId = soldProducts.CustomerId;
+
                 await _context.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!SoldProductsExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                throw;
+
             }
 
             return NoContent();
@@ -76,33 +56,17 @@ namespace FinalAPI.Controllers
         // POST: api/SoldProducts
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<SoldProducts>> PostSoldProducts(SoldProducts soldProducts)
+        public async Task<ActionResult<SoldProducts>> PostSoldProducts(SoldProductsDTO soldProducts)
         {
-            _context.SoldProducts.Add(soldProducts);
+            SoldProducts s = new SoldProducts();
+
+            s.ProductId = soldProducts.ProductId;
+            s.CustomerId = soldProducts.CustomerId;
+
+            _context.SoldProducts.Add(s);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetSoldProducts", new { id = soldProducts.Id }, soldProducts);
-        }
-
-        // DELETE: api/SoldProducts/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteSoldProducts(int id)
-        {
-            var soldProducts = await _context.SoldProducts.FindAsync(id);
-            if (soldProducts == null)
-            {
-                return NotFound();
-            }
-
-            _context.SoldProducts.Remove(soldProducts);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        private bool SoldProductsExists(int id)
-        {
-            return _context.SoldProducts.Any(e => e.Id == id);
+            return Ok();
         }
     }
 }

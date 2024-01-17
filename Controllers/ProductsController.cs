@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using FinalAPI.Data;
 using FinalAPI.EF;
+using FinalAPI.Models;
 
 namespace FinalAPI.Controllers
 {
@@ -38,29 +39,26 @@ namespace FinalAPI.Controllers
         // PUT: api/Products/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutProduct(int id, Product product)
+        public async Task<IActionResult> PutProduct(int id, ProductDTO product)
         {
-            if (id != product.Id)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(product).State = EntityState.Modified;
-
             try
             {
+                var p = await _context.Product.FindAsync(id);
+                if (p == null)
+                    return NotFound();
+                p.Name = product.Name;
+                p.Description = product.Description;
+                p.Type = product.Type;
+                p.Policy = product.Policy;
+                p.Amount = 10 * ((int)product.Policy + 1) * ((int)product.Category + 1) * ((int)product.Type + 1);
+                p.Category = product.Category;
+
                 await _context.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!ProductExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                throw;
+
             }
 
             return NoContent();
@@ -69,17 +67,24 @@ namespace FinalAPI.Controllers
         // POST: api/Products
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Product>> PostProduct(Product product)
+        public async Task<ActionResult<Product>> PostProduct(ProductDTO product)
         {
-            _context.Product.Add(product);
+            if (product == null)
+                return BadRequest();
+
+            Product p = new Product();
+
+            p.Name = product.Name;
+            p.Description = product.Description;
+            p.Type = product.Type;
+            p.Policy = product.Policy;
+            p.Amount = 10 * ((int)product.Policy + 1) * ((int)product.Category + 1) * ((int)product.Type + 1);
+            p.Category = product.Category;
+
+            _context.Product.Add(p);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetProduct", new { id = product.Id }, product);
-        }
-
-        private bool ProductExists(int id)
-        {
-            return _context.Product.Any(e => e.Id == id);
+            return Ok();
         }
     }
 }
